@@ -17,8 +17,8 @@ What's the problem?
 {-# LANGUAGE RankNTypes #-}
 module Main where
 
-data Address =  Address { country, street :: String, house:: Int }
-data Person = Person { age:: Int, name::String, address::Address }
+data Address =  Address { country, street :: String, house:: Int } deriving Show
+data Person = Person { age:: Int, name::String, address::Address } deriving Show
 
 ```
 
@@ -138,6 +138,24 @@ _1 f (x,y)  = fmap (\a -> (a, y)) (f  x)
 0
 ```
 
+```haskell
+
+someone = Person 24 "Bob" (Address "Romania" "Baker str" 90210 )
+
+nameLens':: Lens Person String
+nameLens' f person = fmap (\ newname -> person { name = newname }) (f (name person))
+
+ageLens' f person = fmap (\ newage -> person { age = newage }) (f (age person))
+
+
+```
+
+Notice that lenses can be easily composed
+```
+> ((set nameLens' "Chewbacca") . (set ageLens' 4242) ) someone
+{age = 4242, name = "Chewbacca", address = Address {country = "Romania",
+street = "Baker str", house = 90210}} 
+```
 ```haskell
 main:: IO ()
 main = putStrLn "hey"
