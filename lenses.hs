@@ -10,6 +10,7 @@
 -- * [](http://artyom.me/lens-over-tea-1)
 -- * [](https://en.wikibooks.org/wiki/Haskell/Lenses_and_functional_references)
 -- 
+--
 -- What's the problem?
 -- 
 -- ```haskell
@@ -28,7 +29,7 @@ data Person = Person { age:: Int, name::String, address::Address }
 setStreet p s =  Person (age p) (name p) (Address ((country.address) p) s ((house.address) p ) ) 
 -- ```
 -- 
--- Here come the lenses. s is object, a is focus.
+-- Here come the lenses. ```s``` is object, ```a``` is focus.
 -- 
 -- 
 -- 
@@ -45,7 +46,7 @@ setter =  set' nameLens "Bob" john
 
 -- ```
 -- 
--- We use 'over' to get out of the boring 'view-apply-set' room. Looks like fmap.
+-- We use ```over``` to get out of the boring "view-apply-set" room. Looks like fmap.
 -- 
 -- ```haskell
 data Lens1 s a = Lens1 { view :: s -> a, set  :: a -> s -> s, over1:: (a->a) -> s -> s }

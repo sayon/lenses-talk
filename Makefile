@@ -3,7 +3,7 @@ MARKDOWN_FILE=lenses.md
 all: sources html launch
 
 sources:
-	sed 's/^--//g' < lenses.hs > $(MARKDOWN_FILE)
+	sed 's/^-- \?//g' < lenses.hs > $(MARKDOWN_FILE)
 	#sed -e '/```haskell/,/```/ ! s/^/-- / ' $(MARKDOWN_FILE) | sed -e 's/^```/-- ```/' > lenses.hs
 
 html:
