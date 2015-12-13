@@ -2,13 +2,13 @@
 -- 
 -- First some sources: 
 -- 
--- * [](https://hackage.haskell.org/package/lens)
--- * [](http://blog.jakubarnold.cz/2014/07/14/lens-tutorial-introduction-part-1.html)
--- * [](http://blog.jakubarnold.cz/2014/08/06/lens-tutorial-stab-traversal-part-2.html)
--- * [](https://github.com/ekmett/lens/wiki)
--- * [](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
--- * [](http://artyom.me/lens-over-tea-1)
--- * [](https://en.wikibooks.org/wiki/Haskell/Lenses_and_functional_references)
+-- * [Lens package doc](https://hackage.haskell.org/package/lens)
+-- * [Introduction pt. 1](http://blog.jakubarnold.cz/2014/07/14/lens-tutorial-introduction-part-1.html)
+-- * [Introduction pt. 2](http://blog.jakubarnold.cz/2014/08/06/lens-tutorial-stab-traversal-part-2.html)
+-- * [Lens wiki](https://github.com/ekmett/lens/wiki)
+-- * [Lens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
+-- * [Lens over tea](http://artyom.me/lens-over-tea-1)
+-- * [Lenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/Lenses_and_functional_references)
 -- 
 --
 -- What's the problem?
@@ -49,7 +49,7 @@ setter =  set' nameLens "Bob" john
 -- We use ```over``` to get out of the boring "view-apply-set" room. Looks like fmap.
 -- 
 -- ```haskell
-data Lens1 s a = Lens1 { view :: s -> a, set  :: a -> s -> s, over1:: (a->a) -> s -> s }
+data Lens1 s a = Lens1 { view1 :: s -> a, set1  :: a -> s -> s, over1:: (a->a) -> s -> s }
 
 ageLens :: Lens1 Person Int
 ageLens = Lens1 age
@@ -60,7 +60,7 @@ ageLens = Lens1 age
 -- 
 -- It means however we need to provide loads of code for each lens AND make multiple lenses for each data type.
 -- 
--- However thanks to 'const' we can define 'set' in terms of 'view' and 'over'.
+-- However thanks to ```const``` we can define ```set``` in terms of ```view``` and ```over```.
 -- Const ignores the current value.
 -- 
 -- ```haskell
@@ -72,12 +72,12 @@ set'' ln a s = over'' ln (const a) s
 
 -- ```
 -- 
--- We could want to make 'overIO' or other such things. Let's stick to a functor instead for the sake of making things general.
+-- We could want to make ```overIO``` or other such things. Let's stick to a functor instead for the sake of making things general.
 -- 
 -- ` overF :: Functor f => (a -> f a) -> s -> f s`
 -- 
 -- 
--- Strangely enough, we can derive 'set' and 'view' from it (the explanation will be delayed a bit). Thanks to that we can just make a type alias
+-- Strangely enough, we can derive ```set``` and ```view``` from it (the explanation will be delayed a bit). Thanks to that we can just make a type alias
 -- 
 -- 
 -- ```haskell
@@ -85,9 +85,9 @@ type Lens s a = Functor f => (a -> f a) -> s -> f s
 
 -- ```
 -- 
--- Note: we need RankNTypes for the following.
+-- Note: we need ```RankNTypes``` for the following.
 -- 
--- Let's step aside for a bit and look at  `Control.Applicative.Const` and `Data.Functor.Identity`
+-- Let's step aside for a bit and look at  ```Control.Applicative.Const``` and ```Data.Functor.Identity```
 -- 
 -- ```haskell
 newtype Identity a = Identity { runIdentity :: a }
@@ -102,14 +102,43 @@ over:: Lens s a -> (a -> a) -> (s -> s)
 over ln f s = runIdentity $ ln ( Identity . f ) s
 
 -- ```
--- `Const` can help with the view as well.
+-- ```Const``` can help with the view as well (quite tricky).
 --
--- 
--- 
+--
+-- ```haskell
+newtype Const a b = Const { getConst :: a } 
+
+instance Functor (Const a) where
+        fmap _ (Const c) = Const c 
+
+
+view :: Lens s a -> s -> a
+view ln s = getConst $ ln Const s
+
+set :: Lens s a -> a -> s -> s
+set ln x = over ln (const x)
+
+-- ```
+--
+--
+-- ##Example: first component of a pair
 -- 
 -- ```haskell
 
+_1 :: Lens (a,b) a 
+_1 f (x,y)  = fmap (\a -> (a, y)) (f  x)
 
+-- ```
+--
+-- ```
+-- > let test = (1,2)
+-- > set _1 0 test
+-- (0, 2)
+-- > view _1 test
+-- 0
+-- ```
+
+-- ```haskell
 main:: IO ()
 main = putStrLn "hey"
 
