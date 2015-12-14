@@ -47,6 +47,8 @@ setter =  set' nameSLens "Bob" john
 -- ```
 -- 
 -- We use ```over``` to get out of the boring "view-apply-set" room. Looks like fmap.
+-- Additionally for more complex structures like Map update and view-set
+-- can have different costs.
 -- 
 -- ```haskell
 data SLens1 s a = SLens1 { view1 :: s -> a, set1  :: a -> s -> s, over1:: (a->a) -> s -> s }
@@ -165,10 +167,51 @@ type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
 -- ```
 --
 -- This way the structure's type does not need to be preserved. 
--- The lenses can be pushed even further. As for now they are bad when
--- dealing with recursive types (such as List)
 --
+-- ### Lenses summary:
+-- * similar to ``` modify :: (a -> b) -> s -> t```. With Functor we can do
+-- more cool stuff 
+--actually like ultraModify :: Functor f => (a -> f b) -> s -> f t... and
+--this f here enables us to do lots of cool stuff.
+--
+-- * If you want a lens to be like an ordinary modify, use Identity in place
+--of f. This is done by over in lens.
+--
+-- * If you want to use the lens as a getter, use Const as f – it would store
+--the a value and “carry it to the outside” for you. This is done by view
+--in lens.
+--
+-- * You don't need any special overM to update the value using IO or
+--something – just apply the lens directly. over is merely a convenient
+--shortcut to wrap and unwrap Identity.
+--
+-- * You can create a lens from a getter and a setter, but it might be less
+--than optimal (because this way modify would necessarily be a combination
+--of get and set, instead of a single “dive” into the data structure).
+-- The lenses can be pushed even further. As for now they are bad when
+-- dealing with recursive types (such as List). Let's take a look at
+-- ```Traversable``` / ```Foldable```
+--
+-- ## Foldable
+-- Typeclass ```foldable``` generalizes list folding 
+--  requires one of these to work:
+--  * ```foldMap::foldMap :: Monoid m => (a -> m) -> t a -> m```
+--  * ```foldr:: (a -> b -> b) -> b -> t a -> b```
+--
+--
+--  
+--
+-- ## Traversable
+-- ```traversable``` crawls the structure and produces an overall effect.
+-- kkkkллk
 -- ```haskell
+
+
+-- ```
+--
+--
+--
+---- ```haskell
 
 data User = User String [Post] deriving Show
 data Post = Post String deriving Show
@@ -185,7 +228,13 @@ users = [User "john" [Post "hello", Post "world"], User "bob" [Post "foobar"]]
 -- ```
 -- After importing ```Control.Lens``` from scratch we can use
 -- ```traverse``` to change focus from ```[a]``` to ```a```.
--- Note: ```traverse:::: (Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)```
+-- Note: ```traverse:: (Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)```
+--
+--
+-- ```
+-- > view (traverse.posts) users
+-- [Post "hello",Post "world",Post "foobar"]
+--
 --
 -- ```haskell
 main:: IO ()
