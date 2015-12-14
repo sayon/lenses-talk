@@ -1,14 +1,14 @@
 -- # Lenses, what are they?
 -- 
--- First some sources: 
+-- First some sources (this document is a brief compilation): 
 -- 
--- * [Lens package doc](https://hackage.haskell.org/package/lens)
+-- * [SLens package doc](https://hackage.haskell.org/package/lens)
 -- * [Introduction pt. 1](http://blog.jakubarnold.cz/2014/07/14/lens-tutorial-introduction-part-1.html)
 -- * [Introduction pt. 2](http://blog.jakubarnold.cz/2014/08/06/lens-tutorial-stab-traversal-part-2.html)
--- * [Lens wiki](https://github.com/ekmett/lens/wiki)
--- * [Lens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
--- * [Lens over tea](http://artyom.me/lens-over-tea-1)
--- * [Lenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/Lenses_and_functional_references)
+-- * [SLens wiki](https://github.com/ekmett/lens/wiki)
+-- * [SLens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
+-- * [SLens over tea](http://artyom.me/lens-over-tea-1)
+-- * [SLenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/SLenses_and_functional_references)
 -- 
 --
 -- What's the problem?
@@ -34,25 +34,25 @@ setStreet p s =  Person (age p) (name p) (Address ((country.address) p) s ((hous
 -- 
 -- 
 -- ```haskell
-data NaiveLens s a = NaiveLens { view' :: s -> a, set'  :: a -> s -> s }
+data NaiveSLens s a = NaiveSLens { view' :: s -> a, set'  :: a -> s -> s }
 
 john = Person  42 "John" $ Address "France" "Rue" 42
 
 
-nameLens :: NaiveLens Person String
-nameLens = NaiveLens name (\ a s -> Person (age s) a (address s) )
+nameSLens :: NaiveSLens Person String
+nameSLens = NaiveSLens name (\ a s -> Person (age s) a (address s) )
 
-setter =  set' nameLens "Bob" john
+setter =  set' nameSLens "Bob" john
 
 -- ```
 -- 
 -- We use ```over``` to get out of the boring "view-apply-set" room. Looks like fmap.
 -- 
 -- ```haskell
-data Lens1 s a = Lens1 { view1 :: s -> a, set1  :: a -> s -> s, over1:: (a->a) -> s -> s }
+data SLens1 s a = SLens1 { view1 :: s -> a, set1  :: a -> s -> s, over1:: (a->a) -> s -> s }
 
-ageLens :: Lens1 Person Int
-ageLens = Lens1 age
+ageSLens :: SLens1 Person Int
+ageSLens = SLens1 age
                      (\a s -> s { age = a })
                      (\f s -> s { age = f (age s) })
 
@@ -65,9 +65,9 @@ ageLens = Lens1 age
 -- 
 -- ```haskell
 
-data Lens2 s a = Lens2 { view'' :: s -> a, over'':: (a->a) -> s -> s }
+data SLens2 s a = SLens2 { view'' :: s -> a, over'':: (a->a) -> s -> s }
 
-set'' :: Lens2 s a -> a -> s -> s
+set'' :: SLens2 s a -> a -> s -> s
 set'' ln a s = over'' ln (const a) s
 
 -- ```
@@ -81,7 +81,7 @@ set'' ln a s = over'' ln (const a) s
 -- 
 -- 
 -- ```haskell
-type Lens s a = Functor f => (a -> f a) -> s -> f s
+type SLens s a = Functor f => (a -> f a) -> s -> f s
 
 -- ```
 -- 
@@ -96,9 +96,9 @@ instance Functor Identity where
   fmap f (Identity a) = Identity (f a)
 --```
 -- Recall: 
--- type Lens s a = Functor f => (a -> f a) -> s -> f s
+-- type SLens s a = Functor f => (a -> f a) -> s -> f s
 --```haskell
-over:: Lens s a -> (a -> a) -> (s -> s)
+over:: SLens s a -> (a -> a) -> (s -> s)
 over ln f s = runIdentity $ ln ( Identity . f ) s
 
 -- ```
@@ -112,10 +112,10 @@ instance Functor (Const a) where
         fmap _ (Const c) = Const c 
 
 
-view :: Lens s a -> s -> a
+view :: SLens s a -> s -> a
 view ln s = getConst $ ln Const s
 
-set :: Lens s a -> a -> s -> s
+set :: SLens s a -> a -> s -> s
 set ln x = over ln (const x)
 
 -- ```
@@ -125,7 +125,7 @@ set ln x = over ln (const x)
 -- 
 -- ```haskell
 
-_1 :: Lens (a,b) a 
+_1 :: SLens (a,b) a 
 _1 f (x,y)  = fmap (\a -> (a, y)) (f  x)
 
 -- ```
@@ -142,20 +142,51 @@ _1 f (x,y)  = fmap (\a -> (a, y)) (f  x)
 
 someone = Person 24 "Bob" (Address "Romania" "Baker str" 90210 )
 
-nameLens':: Lens Person String
-nameLens' f person = fmap (\ newname -> person { name = newname }) (f (name person))
+nameSLens':: SLens Person String
+nameSLens' f person = fmap (\ newname -> person { name = newname }) (f (name person))
 
-ageLens' f person = fmap (\ newage -> person { age = newage }) (f (age person))
+ageSLens' f person = fmap (\ newage -> person { age = newage }) (f (age person))
 
 
 -- ```
 --
 -- Notice that lenses can be easily composed
 -- ```
--- > ((set nameLens' "Chewbacca") . (set ageLens' 4242) ) someone
+-- > ((set nameSLens' "Chewbacca") . (set ageSLens' 4242) ) someone
 -- {age = 4242, name = "Chewbacca", address = Address {country = "Romania",
 -- street = "Baker str", house = 90210}} 
 -- ```
+-- ## Generalization
+-- Let's generalize our lenses' type. 
+-- ```haskell
+type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
+
+
+-- ```
+--
+-- This way the structure's type does not need to be preserved. 
+-- The lenses can be pushed even further. As for now they are bad when
+-- dealing with recursive types (such as List)
+--
+-- ```haskell
+
+data User = User String [Post] deriving Show
+data Post = Post String deriving Show
+
+posts :: SLens User [Post]
+posts f (User n p) = fmap (\p' -> User n p') (f p)
+
+title :: SLens Post String
+title f (Post t) = fmap Post (f t)
+
+users :: [User]
+users = [User "john" [Post "hello", Post "world"], User "bob" [Post "foobar"]]
+
+-- ```
+-- After importing ```Control.Lens``` from scratch we can use
+-- ```traverse``` to change focus from ```[a]``` to ```a```.
+-- Note: ```traverse:::: (Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)```
+--
 -- ```haskell
 main:: IO ()
 main = putStrLn "hey"
