@@ -17,6 +17,8 @@
 {-# LANGUAGE RankNTypes #-}
 module Main where
 
+import Data.Monoid
+
 data Address =  Address { country, street :: String, house:: Int } deriving Show
 data Person = Person { age:: Int, name::String, address::Address } deriving Show
 
@@ -74,7 +76,7 @@ set'' ln a s = over'' ln (const a) s
 
 -- ```
 -- 
--- We could want to make ```overIO``` or other such things. Let's stick to a functor instead for the sake of making things general.
+-- We could want to make ```overIO``` or something like that with monads. Let's stick to a functor instead for the sake of making things general.
 -- 
 -- ` overF :: Functor f => (a -> f a) -> s -> f s`
 -- 
@@ -195,15 +197,28 @@ type Lens s t a b = forall f. Functor f => (a -> f b) -> s -> f t
 -- ## Foldable
 -- Typeclass ```foldable``` generalizes list folding 
 --  requires one of these to work:
---  * ```foldMap::foldMap :: Monoid m => (a -> m) -> t a -> m```
---  * ```foldr:: (a -> b -> b) -> b -> t a -> b```
+--  * ```foldMap::foldMap :: Monoid m => (a -> m) -> t a -> m``` converts
+--  elements to monoid and executes mconcat
+--  * ```foldr:: (a -> (b -> b)) -> b -> t a -> b```
 --
+--  To express foldr through foldMap we use the fact of endomorphisms
+--  forming a monoid ( id, (.) ).
+--  The corresponding type is called Endo.
+--```haskell
+newtype Endo b = Endo { appEndo :: b -> b }
+                
+
+instance Monoid (Main.Endo b) where
+        mempty = Main.Endo id
+        mappend (Main.Endo g) (Main.Endo f) = Main.Endo (g . f)
+-- ```
+-- Foldable can be transformed to list with ```toList```
 --
 --  
 --
 -- ## Traversable
 -- ```traversable``` crawls the structure and produces an overall effect.
--- kkkkллk
+-- 
 -- ```haskell
 
 
