@@ -80,7 +80,7 @@ set'' ln a s = over'' ln (const a) s
 -- 
 -- We could want to make ```overIO``` or something like that with monads. Let's stick to a functor instead for the sake of making things general.
 -- 
--- ` overF :: Functor f => (a -> f a) -> s -> f s`
+-- `overF :: Functor f => (a -> f a) -> s -> f s`
 -- 
 -- 
 -- Strangely enough, we can derive ```set``` and ```view``` from it (the explanation will be delayed a bit). Thanks to that we can just make a type alias
@@ -102,7 +102,7 @@ instance Functor Identity where
   fmap f (Identity a) = Identity (f a)
 --```
 -- Recall: 
--- type SLens s a = Functor f => (a -> f a) -> s -> f s
+-- type SLens s a = forall f. Functor f => (a -> f a) -> s -> f s
 --```haskell
 over:: SLens s a -> (a -> a) -> (s -> s)
 over ln f s = runIdentity $ ln ( Identity . f ) s
@@ -114,12 +114,12 @@ over ln f s = runIdentity $ ln ( Identity . f ) s
 -- ```haskell
 newtype Const a b = Const { getConst :: a } 
 
-instance Functor (Main.Const a) where
-        fmap _ (Main.Const c) = Main.Const c 
+instance Functor (Const a) where
+        fmap _ (Const c) = Const c 
 
 
 view :: SLens s a -> s -> a
-view ln s = Main.getConst $ ln Main.Const s
+view ln s = getConst $ (ln Const) s
 
 set :: SLens s a -> a -> s -> s
 set ln x = over ln (const x)
