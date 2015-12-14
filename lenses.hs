@@ -9,7 +9,8 @@
 -- * [Lens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
 -- * [Lens over tea](http://artyom.me/lens-over-tea-1)
 -- * [Lenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/SLenses_and_functional_references)
--- 
+-- * [Derivation](https://github.com/ekmett/lens/wiki/Derivation)
+--
 --
 -- What's the problem?
 -- 
@@ -218,7 +219,15 @@ instance Monoid (Main.Endo b) where
 --
 -- ## Traversable
 -- ```traversable``` crawls the structure and produces an overall effect.
--- 
+--
+-- Let's take a look at the lists:
+--  * ```fmap``` (aka ```map```) acts on each element, rebuilds the structure
+--  * ```foldMap``` casts each element into monoid, collects using ```mappend```
+--  Some things can't be expressed this way. Meet ```Traversable```
+--  Define either ```traverse``` or ```sequenceA```
+--  * ```traverse :: Applicative f => (a -> f b) -> t a -> f (t b)```
+--  * ```sequenceA :: Applicative f => t (f a) -> f (t a)```
+--
 -- ```haskell
 
 
