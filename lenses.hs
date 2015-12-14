@@ -19,6 +19,7 @@
 module Main where
 
 import Data.Monoid
+import Control.Applicative
 
 data Address =  Address { country, street :: String, house:: Int } deriving Show
 data Person = Person { age:: Int, name::String, address::Address } deriving Show
@@ -113,12 +114,12 @@ over ln f s = runIdentity $ ln ( Identity . f ) s
 -- ```haskell
 newtype Const a b = Const { getConst :: a } 
 
-instance Functor (Const a) where
-        fmap _ (Const c) = Const c 
+instance Functor (Main.Const a) where
+        fmap _ (Main.Const c) = Main.Const c 
 
 
 view :: SLens s a -> s -> a
-view ln s = getConst $ ln Const s
+view ln s = Main.getConst $ ln Main.Const s
 
 set :: SLens s a -> a -> s -> s
 set ln x = over ln (const x)
@@ -238,7 +239,8 @@ instance Monoid (Main.Endo b) where
 --  Just [4,5]
 --  ```
 --
---  Think about 'interleaving contexts'
+--  Think about 'interleaving contexts'.
+--
 --  Using any applicative functor we can produce effects with
 --  ```Traversable```, ```fmap``` and ```foldMap``` can be expressed:
 --
@@ -249,16 +251,58 @@ instance Monoid (Main.Endo b) where
 -- ```traverse``` lets us target parts of the whole. 
 -- If we want to walk over different structures (inc. not of class
 -- ```Traversable``` we need ```Traversal```
--- 
+-- ##Traversal example
 -- ```haskell
 
+data Point = Point
+    { positionX :: Double
+    , positionY :: Double
+    } deriving (Show)
 
+data Segment = Segment
+    { segmentStart :: Point
+    , segmentEnd :: Point
+    } deriving (Show)
+
+makePoint :: (Double, Double) -> Point
+makePoint (x, y) = Point x y
+
+makeSegment :: (Double, Double) -> (Double, Double) -> Segment
+makeSegment start end = Segment (makePoint start) (makePoint end)
+
+
+pointCoordinates :: Applicative f => (Double -> f Double) -> Point -> f Point
+pointCoordinates g (Point x y) = Point <$> g x <*> g y
+
+
+type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
+
+-- ```
+--
+-- For pointCoordinates this one is ``` Traversal  Point Point Double Double ```
+-- Let's have a closer look at what became of each type variable in
+-- Traversal s t a b:
+-- * ```s``` becomes ```Point```: ```pointCoordinates``` is a traversal of a ```Point```.
+-- * ```t``` becomes ```Point```: ```pointCoordinates``` produces a ```Point``` (in some ```Applicative```
+-- context).
+-- * a becomes ```Double```: ```pointCoordinates``` targets ```Double``` values in a ```Point``` (the
+-- ```X``` and ```Y``` coordinates of the points).
+-- * ```b``` becomes ```Double```: the targeted Double values become Double values
+-- (possibly different than the original ones). 
+--
+-- Recall :
+-- ```
+-- traverse::(Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)
 -- ```
 --
 --
 --
----- ```haskell
-
+--
+--
+--
+--
+--
+--```haskell
 data User = User String [Post] deriving Show
 data Post = Post String deriving Show
 
