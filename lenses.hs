@@ -228,6 +228,28 @@ instance Monoid (Main.Endo b) where
 --  * ```traverse :: Applicative f => (a -> f b) -> t a -> f (t b)```
 --  * ```sequenceA :: Applicative f => t (f a) -> f (t a)```
 --
+--  Example:
+--  ```
+--  > traverse (\x-> [0..x]) $ Just 5
+--  [Just 0,Just 1,Just 2,Just 3,Just 4,Just 5]
+--  > traverse (\x->if x>3 then Just x else Nothing) [1..5]
+--  Nothing
+--  > traverse (\x->if x>3 then Just x else Nothing) [4,5]
+--  Just [4,5]
+--  ```
+--
+--  Think about 'interleaving contexts'
+--  Using any applicative functor we can produce effects with
+--  ```Traversable```, ```fmap``` and ```foldMap``` can be expressed:
+--
+-- ```
+-- fmap f = runIdentity . traverse (Identity . f)
+-- foldMap f = getConst . traverse (Const . f)
+-- ```
+-- ```traverse``` lets us target parts of the whole. 
+-- If we want to walk over different structures (inc. not of class
+-- ```Traversable``` we need ```Traversal```
+-- 
 -- ```haskell
 
 
