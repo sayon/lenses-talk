@@ -250,7 +250,7 @@ instance Monoid (Main.Endo b) where
 -- ```
 -- ```traverse``` lets us target parts of the whole. 
 -- If we want to walk over different structures (inc. not of class
--- ```Traversable``` we need ```Traversal```
+-- ```Traversable```) we need ```Traversal```
 -- ##Traversal example
 -- ```haskell
 
@@ -290,16 +290,38 @@ type Traversal s t a b = forall f. Applicative f => (a -> f b) -> s -> f t
 -- * ```b``` becomes ```Double```: the targeted Double values become Double values
 -- (possibly different than the original ones). 
 --
--- Recall :
+-- Recall:
 -- ```
 -- traverse::(Traversable t, Applicative f) => (a -> f b) -> t a -> f (t b)
 -- ```
+-- 
+--
+-- ```Control.Lens.Traversable``` for generalization of ```Traversable```.
+--
+-- ##Setters
+-- That hierarchy is about expressing things from other things.
+--
+-- When we recovered ```fmap``` from ```traverse```, we used ```Identity```
+-- functor.
+-- Picking the definition of ```Traversal``` and taking
+-- ```f```==```Identity``` we get a **setter**.
+--
+-- ```
+-- (a -> Identity b) -> s -> Identity t
+-- ```
+--
+-- For technical reasons 
+-- ```
+---type Setter s t a b = forall f. Settable f => (a -> f b) -> s -> f t 
+-- ```
+--
+-- but Settable is very similar to Identity.
 --
 --
 --
 --
 --
---
+-- ##Folds
 --
 --
 --```haskell
