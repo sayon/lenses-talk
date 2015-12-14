@@ -2,13 +2,13 @@
 -- 
 -- First some sources (this document is a brief compilation): 
 -- 
--- * [SLens package doc](https://hackage.haskell.org/package/lens)
+-- * [Lens package doc](https://hackage.haskell.org/package/lens)
 -- * [Introduction pt. 1](http://blog.jakubarnold.cz/2014/07/14/lens-tutorial-introduction-part-1.html)
 -- * [Introduction pt. 2](http://blog.jakubarnold.cz/2014/08/06/lens-tutorial-stab-traversal-part-2.html)
--- * [SLens wiki](https://github.com/ekmett/lens/wiki)
--- * [SLens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
--- * [SLens over tea](http://artyom.me/lens-over-tea-1)
--- * [SLenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/SLenses_and_functional_references)
+-- * [Lens wiki](https://github.com/ekmett/lens/wiki)
+-- * [Lens in pictures](http://adit.io/posts/2013-07-22-lenses-in-pictures.html)
+-- * [Lens over tea](http://artyom.me/lens-over-tea-1)
+-- * [Lenses and functional references: wiki](https://en.wikibooks.org/wiki/Haskell/SLenses_and_functional_references)
 -- 
 --
 -- What's the problem?
